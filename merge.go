@@ -5,8 +5,16 @@ package qson
 func merge(a interface{}, b interface{}) interface{} {
 	switch aT := a.(type) {
 	case map[string]interface{}:
+		if _, ok := b.(map[string]interface{}); !ok {
+			return b
+		}
+
 		return mergeMap(aT, b.(map[string]interface{}))
 	case []interface{}:
+		if _, ok := b.([]any); !ok {
+			return b
+		}
+
 		return mergeSlice(aT, b.([]interface{}))
 	default:
 		return b

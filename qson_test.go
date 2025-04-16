@@ -52,7 +52,7 @@ func ExampleToJSON() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf(string(b))
+	fmt.Print(string(b))
 	// Output: {"a":"xyz","b":{"c":456}}
 }
 
@@ -159,7 +159,7 @@ func TestWithEqualSignInValue(t *testing.T) {
 	expected := unmarshalT{
 		A: "xyz",
 		B: unmarshalB{
-			D: "this is an = sign",
+			D: "this is an= sign",
 		},
 	}
 	var actual unmarshalT
@@ -175,6 +175,36 @@ func TestWithEqualSignInValue(t *testing.T) {
 func TestEncodedAmpersand2(t *testing.T) {
 	query := "filter=parent%3Dflow12345%26request%3Dreq12345&meta.limit=20&meta.offset=0"
 	expected := map[string]interface{}{"filter": "parent=flow12345&request=req12345", "meta.limit": float64(20), "meta.offset": float64(0)}
+	actual := make(map[string]interface{})
+	err := Unmarshal(&actual, query)
+	if err != nil {
+		t.Error(err)
+	}
+	for k, v := range actual {
+		if nv, ok := expected[k]; !ok || nv != v {
+			t.Errorf("Expected: %+v Actual: %+v", expected, actual)
+		}
+	}
+}
+
+func TestPanicWhenParamsArentOfTheSameTypeMap(t *testing.T) {
+	query := "em[x]=y&em=zzz"
+	expected := map[string]interface{}{"em": "zzz"}
+	actual := make(map[string]interface{})
+	err := Unmarshal(&actual, query)
+	if err != nil {
+		t.Error(err)
+	}
+	for k, v := range actual {
+		if nv, ok := expected[k]; !ok || nv != v {
+			t.Errorf("Expected: %+v Actual: %+v", expected, actual)
+		}
+	}
+}
+
+func TestPanicWhenParamsArentOfTheSameTypeList(t *testing.T) {
+	query := "em[]=y&em=zzz"
+	expected := map[string]interface{}{"em": "zzz"}
 	actual := make(map[string]interface{})
 	err := Unmarshal(&actual, query)
 	if err != nil {
