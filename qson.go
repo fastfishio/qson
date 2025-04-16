@@ -45,10 +45,13 @@ func Unmarshal(dst interface{}, query string) error {
 }
 
 // ToJSON will turn a query string like:
-//   cat=1&bar%5Bone%5D%5Btwo%5D=2&bar[one][red]=112
+//
+//	cat=1&bar%5Bone%5D%5Btwo%5D=2&bar[one][red]=112
+//
 // Into a JSON object with all the data merged as nicely as
 // possible. Eg the example above would output:
-//   {"bar":{"one":{"two":2,"red":112}}}
+//
+//	{"bar":{"one":{"two":2,"red":112}}}
 func ToJSON(query string) ([]byte, error) {
 	var (
 		builder interface{} = make(map[string]interface{})
@@ -65,18 +68,20 @@ func ToJSON(query string) ([]byte, error) {
 }
 
 // queryToMap turns something like a[b][c]=4 into
-//   map[string]interface{}{
-//     "a": map[string]interface{}{
-// 		  "b": map[string]interface{}{
-// 			  "c": 4,
-// 		  },
-// 	  },
-//   }
+//
+//	  map[string]interface{}{
+//	    "a": map[string]interface{}{
+//			  "b": map[string]interface{}{
+//				  "c": 4,
+//			  },
+//		  },
+//	  }
 func queryToMap(param string) (map[string]interface{}, error) {
 	rawKey, rawValue, err := splitKeyAndValue(param)
 	if err != nil {
 		return nil, err
 	}
+
 	rawValue, err = url.QueryUnescape(rawValue)
 	if err != nil {
 		return nil, err
@@ -115,7 +120,7 @@ func queryToMap(param string) (map[string]interface{}, error) {
 	//   a and b[c]
 	// and then we set {"a": queryToMap("b[c]", value)}
 	ret := make(map[string]interface{}, 0)
-	ret[key], err = queryToMap(buildNewKey(rawKey) + "=" + rawValue)
+	ret[key], err = queryToMap(buildNewKey(rawKey) + "=" + url.QueryEscape(rawValue))
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +151,7 @@ func buildNewKey(origKey string) string {
 // sign and returns the two strings. If no equal sign is
 // found, the ErrInvalidParam error is returned.
 func splitKeyAndValue(param string) (string, string, error) {
-	li := strings.Index(param, "=")
+	li := strings.LastIndex(param, "=")
 	if li == -1 {
 		return "", "", ErrInvalidParam
 	}
